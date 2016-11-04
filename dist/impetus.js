@@ -1,40 +1,20 @@
-(function (global, factory) {
-	if (typeof define === 'function' && define.amd) {
-		define(['exports', 'module'], factory);
-	} else if (typeof exports !== 'undefined' && typeof module !== 'undefined') {
-		factory(exports, module);
-	} else {
-		var mod = {
-			exports: {}
-		};
-		factory(mod.exports, mod);
-		global.Impetus = mod.exports;
-	}
-})(this, function (exports, module) {
-	'use strict';
 
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+const stopThresholdDefault = 0.3;
+const bounceDeceleration = 0.04;
+const bounceAcceleration = 0.11;
 
-	var stopThresholdDefault = 0.3;
-	var bounceDeceleration = 0.04;
-	var bounceAcceleration = 0.11;
 
-	var Impetus = function Impetus(_ref) {
-		var _ref$source = _ref.source;
-		var sourceEl = _ref$source === undefined ? document : _ref$source;
-		var updateCallback = _ref.update;
-		var _ref$multiplier = _ref.multiplier;
-		var multiplier = _ref$multiplier === undefined ? 1 : _ref$multiplier;
-		var _ref$friction = _ref.friction;
-		var friction = _ref$friction === undefined ? 0.92 : _ref$friction;
-		var initialValues = _ref.initialValues;
-		var boundX = _ref.boundX;
-		var boundY = _ref.boundY;
-		var _ref$bounce = _ref.bounce;
-		var bounce = _ref$bounce === undefined ? true : _ref$bounce;
-
-		_classCallCheck(this, Impetus);
-
+export default class Impetus {
+	constructor({
+		source: sourceEl = document,
+		update: updateCallback,
+		multiplier = 1,
+		friction = 0.92,
+		initialValues,
+		boundX,
+		boundY,
+		bounce = true
+	}) {
 		var boundXmin, boundXmax, boundYmin, boundYmax, pointerLastX, pointerLastY, pointerCurrentX, pointerCurrentY, pointerId, decVelX, decVelY;
 		var targetX = 0;
 		var targetY = 0;
@@ -45,11 +25,12 @@
 		var decelerating = false;
 		var trackingPoints = [];
 
+
 		/**
-   * Initialize instance
-   */
+		 * Initialize instance
+		 */
 		(function init() {
-			sourceEl = typeof sourceEl === 'string' ? document.querySelector(sourceEl) : sourceEl;
+			sourceEl = (typeof sourceEl === 'string') ? document.querySelector(sourceEl) : sourceEl;
 			if (!sourceEl) {
 				throw new Error('IMPETUS: source not found.');
 			}
@@ -82,30 +63,32 @@
 			sourceEl.addEventListener('mousedown', onDown);
 		})();
 
+
+
 		/**
-   * Disable movement processing
-   * @public
-   */
-		this.pause = function () {
+		 * Disable movement processing
+		 * @public
+		 */
+		this.pause = function() {
 			pointerActive = false;
 			paused = true;
 		};
 
 		/**
-   * Enable movement processing
-   * @public
-   */
-		this.resume = function () {
+		 * Enable movement processing
+		 * @public
+		 */
+		this.resume = function() {
 			paused = false;
 		};
 
 		/**
-   * Update the current x and y values
-   * @public
-   * @param {Number} x
-   * @param {Number} y
-   */
-		this.setValues = function (x, y) {
+		 * Update the current x and y values
+		 * @public
+		 * @param {Number} x
+		 * @param {Number} y
+		 */
+		this.setValues = function(x, y) {
 			if (typeof x === 'number') {
 				targetX = x;
 			}
@@ -115,27 +98,27 @@
 		};
 
 		/**
-   * Update the multiplier value
-   * @public
-   * @param {Number} val
-   */
-		this.setMultiplier = function (val) {
+		 * Update the multiplier value
+		 * @public
+		 * @param {Number} val
+		 */
+		this.setMultiplier = function(val) {
 			multiplier = val;
 			stopThreshold = stopThresholdDefault * multiplier;
 		};
 
 		/**
-   * Executes the update function
-   */
+		 * Executes the update function
+		 */
 		function callUpdateCallback() {
 			updateCallback.call(sourceEl, targetX, targetY);
 		}
 
 		/**
-   * Creates a custom normalized event object from touch and mouse events
-   * @param  {Event} ev
-   * @returns {Object} with x, y, and id properties
-   */
+		 * Creates a custom normalized event object from touch and mouse events
+		 * @param  {Event} ev
+		 * @returns {Object} with x, y, and id properties
+		 */
 		function normalizeEvent(ev) {
 			if (ev.type === 'touchmove' || ev.type === 'touchstart' || ev.type === 'touchend') {
 				var touch = ev.targetTouches[0] || ev.changedTouches[0];
@@ -144,8 +127,7 @@
 					y: touch.clientY,
 					id: touch.identifier
 				};
-			} else {
-				// mouse events
+			} else { // mouse events
 				return {
 					x: ev.clientX,
 					y: ev.clientY,
@@ -155,9 +137,9 @@
 		}
 
 		/**
-   * Initializes movement tracking
-   * @param  {Object} ev Normalized event
-   */
+		 * Initializes movement tracking
+		 * @param  {Object} ev Normalized event
+		 */
 		function onDown(ev) {
 			var event = normalizeEvent(ev);
 			if (!pointerActive && !paused) {
@@ -179,9 +161,9 @@
 		}
 
 		/**
-   * Handles move events
-   * @param  {Object} ev Normalized event
-   */
+		 * Handles move events
+		 * @param  {Object} ev Normalized event
+		 */
 		function onMove(ev) {
 			ev.preventDefault();
 			var event = normalizeEvent(ev);
@@ -195,9 +177,9 @@
 		}
 
 		/**
-   * Handles up/end events
-   * @param {Object} ev Normalized event
-   */
+		 * Handles up/end events
+		 * @param {Object} ev Normalized event
+		 */
 		function onUp(ev) {
 			var event = normalizeEvent(ev);
 
@@ -207,8 +189,8 @@
 		}
 
 		/**
-   * Stops movement tracking, starts animation
-   */
+		 * Stops movement tracking, starts animation
+		 */
 		function stopTracking() {
 			pointerActive = false;
 			addTrackingPoint(pointerLastX, pointerLastY);
@@ -222,10 +204,10 @@
 		}
 
 		/**
-   * Records movement for the last 100ms
-   * @param {number} x
-   * @param {number} y [description]
-   */
+		 * Records movement for the last 100ms
+		 * @param {number} x
+		 * @param {number} y [description]
+		 */
 		function addTrackingPoint(x, y) {
 			var time = Date.now();
 			while (trackingPoints.length > 0) {
@@ -235,12 +217,12 @@
 				trackingPoints.shift();
 			}
 
-			trackingPoints.push({ x: x, y: y, time: time });
+			trackingPoints.push({x, y, time});
 		}
 
 		/**
-   * Calculate new values, call update function
-   */
+		 * Calculate new values, call update function
+		 */
 		function updateAndRender() {
 			var pointerChangeX = pointerCurrentX - pointerLastX;
 			var pointerChangeY = pointerCurrentY - pointerLastY;
@@ -249,7 +231,7 @@
 			targetY += pointerChangeY * multiplier;
 
 			if (bounce) {
-				var diff = checkBounds();
+				let diff = checkBounds();
 				if (diff.x !== 0) {
 					targetX -= pointerChangeX * dragOutOfBoundsMultiplier(diff.x) * multiplier;
 				}
@@ -267,17 +249,19 @@
 			ticking = false;
 		}
 
+
 		/**
-   * Returns a value from around 0.5 to 1, based on distance
-   * @param {Number} val
-   */
+		 * Returns a value from around 0.5 to 1, based on distance
+		 * @param {Number} val
+		 */
 		function dragOutOfBoundsMultiplier(val) {
 			return 0.000005 * Math.pow(val, 2) + 0.0001 * val + 0.55;
 		}
 
+
 		/**
-   * prevents animating faster than current framerate
-   */
+		 * prevents animating faster than current framerate
+		 */
 		function requestTick() {
 			if (!ticking) {
 				requestAnimFrame(updateAndRender);
@@ -285,10 +269,11 @@
 			ticking = true;
 		}
 
+
 		/**
-   * Determine position relative to bounds
-   * @param {Boolean} restrict Whether to restrict target to bounds
-   */
+		 * Determine position relative to bounds
+		 * @param {Boolean} restrict Whether to restrict target to bounds
+		 */
 		function checkBounds(restrict) {
 			var xDiff = 0;
 			var yDiff = 0;
@@ -307,10 +292,10 @@
 
 			if (restrict) {
 				if (xDiff !== 0) {
-					targetX = xDiff > 0 ? boundXmin : boundXmax;
+					targetX = (xDiff > 0) ? boundXmin : boundXmax;
 				}
 				if (yDiff !== 0) {
-					targetY = yDiff > 0 ? boundYmin : boundYmax;
+					targetY = (yDiff > 0) ? boundYmin : boundYmax;
 				}
 			}
 
@@ -321,9 +306,10 @@
 			};
 		}
 
+
 		/**
-   * Initialize animation of values coming to a stop
-   */
+		 * Initialize animation of values coming to a stop
+		 */
 		function startDecelAnim() {
 			var firstPoint = trackingPoints[0];
 			var lastPoint = trackingPoints[trackingPoints.length - 1];
@@ -332,22 +318,27 @@
 			var yOffset = lastPoint.y - firstPoint.y;
 			var timeOffset = lastPoint.time - firstPoint.time;
 
-			var D = timeOffset / 15 / multiplier;
+			var D = (timeOffset / 15) / multiplier;
 
-			decVelX = xOffset / D || 0; // prevent NaN
-			decVelY = yOffset / D || 0;
+			decVelX = (xOffset / D) || 0; // prevent NaN
+			decVelY = (yOffset / D) || 0;
 
 			var diff = checkBounds();
 
-			if (Math.abs(decVelX) > 1 || Math.abs(decVelY) > 1 || !diff.inBounds) {
+			if ((Math.abs(decVelX) > 1 || Math.abs(decVelY) > 1) || !diff.inBounds){
 				decelerating = true;
 				requestAnimFrame(stepDecelAnim);
+			} else {
+				// Emit `momentumend` event when user stops dragging and no acceleration
+				// is needed
+				sourceEl.dispatchEvent(new Event('momentumend'));
 			}
 		}
 
+
 		/**
-   * Animates values slowing down
-   */
+		 * Animates values slowing down
+		 */
 		function stepDecelAnim() {
 			if (!decelerating) {
 				return;
@@ -361,16 +352,16 @@
 
 			var diff = checkBounds();
 
-			if (Math.abs(decVelX) > stopThreshold || Math.abs(decVelY) > stopThreshold || !diff.inBounds) {
+			if ((Math.abs(decVelX) > stopThreshold || Math.abs(decVelY) > stopThreshold) || !diff.inBounds) {
 
 				if (bounce) {
-					var reboundAdjust = 2.5;
+					let reboundAdjust = 2.5;
 
 					if (diff.x !== 0) {
 						if (diff.x * decVelX <= 0) {
 							decVelX += diff.x * bounceDeceleration;
 						} else {
-							var adjust = diff.x > 0 ? reboundAdjust : -reboundAdjust;
+							let adjust = (diff.x > 0) ? reboundAdjust : -reboundAdjust;
 							decVelX = (diff.x + adjust) * bounceAcceleration;
 						}
 					}
@@ -378,7 +369,7 @@
 						if (diff.y * decVelY <= 0) {
 							decVelY += diff.y * bounceDeceleration;
 						} else {
-							var adjust = diff.y > 0 ? reboundAdjust : -reboundAdjust;
+							let adjust = (diff.y > 0) ? reboundAdjust : -reboundAdjust;
 							decVelY = (diff.y + adjust) * bounceAcceleration;
 						}
 					}
@@ -406,19 +397,20 @@
 				requestAnimFrame(stepDecelAnim);
 			} else {
 				decelerating = false;
+				// Emit `momentumend` event when deceleration is complete
+				sourceEl.dispatchEvent(new Event('momentumend'));
 			}
 		}
 	}
+}
 
-	/**
-  * @see http://www.paulirish.com/2011/requestanimationframe-for-smart-animating/
-  */
-	;
 
-	module.exports = Impetus;
-	var requestAnimFrame = (function () {
-		return window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || function (callback) {
-			window.setTimeout(callback, 1000 / 60);
-		};
-	})();
-});
+
+/**
+ * @see http://www.paulirish.com/2011/requestanimationframe-for-smart-animating/
+ */
+const requestAnimFrame = (function(){
+	return window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || function(callback) {
+		window.setTimeout(callback, 1000 / 60);
+	};
+})();
