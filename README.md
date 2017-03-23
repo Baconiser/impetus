@@ -109,6 +109,10 @@ Impetus will register itself as an AMD module if it's available.
 			<th scope="row" align="left">.setValues( &lt;number&gt; , &lt;number&gt; )</th>
 			<td>Adjust the current x and y output values</td>
 		</tr>
+		<tr>
+			<th scope="row" align="left">.setBounds( &lt;array&gt; , &lt;array&gt; )</th>
+			<td>Adjust the X/Y Boundaries</td>
+		</tr>
 	</tbody>
 </table>
 
