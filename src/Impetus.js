@@ -23,6 +23,8 @@ export default class Impetus {
 		var paused = false;
 		var decelerating = false;
 		var trackingPoints = [];
+		var tapped = 0;
+		var firstPointEver = {};
 
 
 		/**
@@ -157,6 +159,8 @@ export default class Impetus {
 		 * @param  {Object} ev Normalized event
 		 */
 		function onDown(ev) {
+			var d = (new Date());
+			tapped = d.getTime();
 			var event = normalizeEvent(ev);
 			if (!pointerActive && !paused) {
 				pointerActive = true;
@@ -167,7 +171,10 @@ export default class Impetus {
 				pointerLastY = pointerCurrentY = event.y;
 				trackingPoints = [];
 				addTrackingPoint(pointerLastX, pointerLastY);
-
+				firstPointEver = {
+					x: event.x,
+					y: event.y
+				};
 				document.addEventListener('touchmove', onMove);
 				document.addEventListener('touchend', onUp);
 				document.addEventListener('touchcancel', stopTracking);
@@ -196,12 +203,29 @@ export default class Impetus {
 		 * Handles up/end events
 		 * @param {Object} ev Normalized event
 		 */
+		var clickDelay = 240;
+
+		function getDistance(first, last) {
+			var firstPoint = first || trackingPoints[0];
+			var lastPoint = last || trackingPoints[trackingPoints.length - 1];
+			return Math.sqrt(Math.pow(lastPoint.x - firstPoint.x, 2) + Math.pow(lastPoint.y - firstPoint.y, 2));
+		}
+
 		function onUp(ev) {
 			var event = normalizeEvent(ev);
-
+			var d = new Date();
+			if (d.getTime() - tapped <= clickDelay && getDistance(firstPointEver, event) < 10) {
+				pointerActive = false;
+				document.removeEventListener('touchmove', onMove);
+				document.removeEventListener('touchend', onUp);
+				document.removeEventListener('touchcancel', stopTracking);
+				document.removeEventListener('mouseup', onUp);
+				document.removeEventListener('mousemove', onMove);
+			}
 			if (pointerActive && event.id === pointerId) {
 				stopTracking();
 			}
+			firstPointEver = {};
 		}
 
 		/**
@@ -330,8 +354,6 @@ export default class Impetus {
 		/**
 		 * Initialize animation of values coming to a stop
 		 */
-		var lastDispatched = {};
-
 		function startDecelAnim() {
 			var firstPoint = trackingPoints[0];
 			var lastPoint = trackingPoints[trackingPoints.length - 1];
@@ -353,16 +375,7 @@ export default class Impetus {
 			} else {
 				// Emit `momentumend` event when user stops dragging and no acceleration
 				// is needed
-				// click produces time delay so if its not dragged but clicked dont emit momentumend
-				// second timestamp because if no movement is made but clicked event is still dispatched
-				var timestamp2 = 0;
-				if (lastDispatched) {
-					timestamp2 = lastDispatched.time - firstPoint.time;
-				}
-				if (!timeOffset && !xOffset && !yOffset && !timestamp2) {
-					sourceEl.dispatchEvent(new Event('momentumend'));
-					lastDispatched = lastPoint;
-				}
+				sourceEl.dispatchEvent(new Event('momentumend'));
 			}
 		}
 

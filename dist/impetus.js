@@ -44,6 +44,7 @@
 		var paused = false;
 		var decelerating = false;
 		var trackingPoints = [];
+		var tapped = 0;
 
 		/**
    * Initialize instance
@@ -175,6 +176,7 @@
    * @param  {Object} ev Normalized event
    */
 		function onDown(ev) {
+			tapped = new Date().getTime();
 			var event = normalizeEvent(ev);
 			if (!pointerActive && !paused) {
 				pointerActive = true;
@@ -214,9 +216,24 @@
    * Handles up/end events
    * @param {Object} ev Normalized event
    */
+		var clickDelay = 240;
+
+		function getDistance() {
+			var firstPoint = trackingPoints[0];
+			var lastPoint = trackingPoints[trackingPoints.length - 1];
+			return Math.sqrt(Math.pow(lastPoint.x - firstPoint.x, 2) + Math.pow(lastPoint.y - firstPoint.y, 2));
+		}
+
 		function onUp(ev) {
 			var event = normalizeEvent(ev);
-
+			if (new Date().getTime() - tapped <= clickDelay && getDistance() < 10) {
+				pointerActive = false;
+				document.removeEventListener('touchmove', onMove);
+				document.removeEventListener('touchend', onUp);
+				document.removeEventListener('touchcancel', stopTracking);
+				document.removeEventListener('mouseup', onUp);
+				document.removeEventListener('mousemove', onMove);
+			}
 			if (pointerActive && event.id === pointerId) {
 				stopTracking();
 			}
@@ -344,8 +361,6 @@
 		/**
    * Initialize animation of values coming to a stop
    */
-		var lastDispatched = {};
-
 		function startDecelAnim() {
 			var firstPoint = trackingPoints[0];
 			var lastPoint = trackingPoints[trackingPoints.length - 1];
@@ -367,16 +382,7 @@
 			} else {
 				// Emit `momentumend` event when user stops dragging and no acceleration
 				// is needed
-				// click produces time delay so if its not dragged but clicked dont emit momentumend
-				// second timestamp because if no movement is made but clicked event is still dispatched
-				var timestamp2 = 0;
-				if (lastDispatched) {
-					timestamp2 = lastDispatched.time - firstPoint.time;
-				}
-				if (!timeOffset && !xOffset && !yOffset && !timestamp2) {
-					sourceEl.dispatchEvent(new Event('momentumend'));
-					lastDispatched = lastPoint;
-				}
+				sourceEl.dispatchEvent(new Event('momentumend'));
 			}
 		}
 
