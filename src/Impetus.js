@@ -1,4 +1,3 @@
-
 const stopThresholdDefault = 0.3;
 const bounceDeceleration = 0.04;
 const bounceAcceleration = 0.11;
@@ -106,6 +105,23 @@ export default class Impetus {
 			multiplier = val;
 			stopThreshold = stopThresholdDefault * multiplier;
 		};
+		/**
+		 * Update the multiplier value
+		 * @public
+		 * @param {Number} val
+		 */
+		this.setBounds = function(boundX, boundY) {
+			// Initialize bound values
+			if (boundX) {
+				boundXmin = boundX[0];
+				boundXmax = boundX[1];
+			}
+			if (boundY) {
+				boundYmin = boundY[0];
+				boundYmax = boundY[1];
+			}
+		};
+
 
 		/**
 		 * Executes the update function
@@ -217,7 +233,11 @@ export default class Impetus {
 				trackingPoints.shift();
 			}
 
-			trackingPoints.push({x, y, time});
+			trackingPoints.push({
+				x,
+				y,
+				time
+			});
 		}
 
 		/**
@@ -310,6 +330,8 @@ export default class Impetus {
 		/**
 		 * Initialize animation of values coming to a stop
 		 */
+		var lastDispatched = {};
+
 		function startDecelAnim() {
 			var firstPoint = trackingPoints[0];
 			var lastPoint = trackingPoints[trackingPoints.length - 1];
@@ -325,13 +347,22 @@ export default class Impetus {
 
 			var diff = checkBounds();
 
-			if ((Math.abs(decVelX) > 1 || Math.abs(decVelY) > 1) || !diff.inBounds){
+			if ((Math.abs(decVelX) > 1 || Math.abs(decVelY) > 1) || !diff.inBounds) {
 				decelerating = true;
 				requestAnimFrame(stepDecelAnim);
 			} else {
 				// Emit `momentumend` event when user stops dragging and no acceleration
 				// is needed
-				sourceEl.dispatchEvent(new Event('momentumend'));
+				// click produces time delay so if its not dragged but clicked dont emit momentumend
+				// second timestamp because if no movement is made but clicked event is still dispatched
+				var timestamp2 = 0;
+				if (lastDispatched) {
+					timestamp2 = lastDispatched.time - firstPoint.time;
+				}
+				if (!timeOffset && !xOffset && !yOffset && !timestamp2) {
+					sourceEl.dispatchEvent(new Event('momentumend'));
+					lastDispatched = lastPoint;
+				}
 			}
 		}
 
@@ -409,7 +440,7 @@ export default class Impetus {
 /**
  * @see http://www.paulirish.com/2011/requestanimationframe-for-smart-animating/
  */
-const requestAnimFrame = (function(){
+const requestAnimFrame = (function() {
 	return window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || function(callback) {
 		window.setTimeout(callback, 1000 / 60);
 	};
