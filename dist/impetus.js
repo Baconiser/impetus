@@ -174,7 +174,7 @@
          * Executes the momentumend function
          */
         function callMomentumEnd() {
-            if (!callback || typeof callback != "function") {
+            if (!momentumendCallback || typeof momentumendCallback != "function") {
                 return;
             }
             momentumendCallback.call(sourceEl);
